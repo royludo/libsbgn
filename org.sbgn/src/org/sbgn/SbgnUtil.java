@@ -8,11 +8,11 @@ import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import javax.xml.bind.UnmarshalException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Schema;
+import javax.xml.validation.Validator;
 
 import org.sbgn.bindings.Sbgn;
 import org.xml.sax.SAXException;
@@ -55,33 +55,20 @@ public class SbgnUtil
 	 */
 	public static boolean isValid (File f) throws JAXBException, SAXException, IOException
 	{
-		boolean result = true;
-		try
-		{
-			
-			// create a JAXB context and unmarshaller like usual
-			JAXBContext context = JAXBContext.newInstance("org.sbgn.bindings");
-			Unmarshaller unmarshaller = context.createUnmarshaller();
-		
-			// parse the schema.
-			// If you call validate many times, 
-			// it would be more efficient to do this step once of course.
-			Schema schema;
-			SchemaFactory schemaFactory = SchemaFactory.newInstance( XMLConstants.W3C_XML_SCHEMA_NS_URI );
-			schema = schemaFactory.newSchema(new StreamSource(getResource("/SBGN.xsd")));
+		// create a JAXB context and unmarshaller like usual
+		JAXBContext context = JAXBContext.newInstance("org.sbgn.bindings");
 
-			// add the schema to the unmarshaller
-			unmarshaller.setSchema(schema);
-			
-			// read the file. If there are problems, an UnmarshalException will be thrown here
-			unmarshaller.unmarshal (f);
-		}
-		catch (UnmarshalException e)
-		{
-			result = false;
-			System.err.println (e.getCause().getMessage());
-		}
-		return result;
+		// parse the schema.
+		// If you call validate many times,
+		// it would be more efficient to do this step once of course.
+		Schema schema;
+		SchemaFactory schemaFactory = SchemaFactory.newInstance( XMLConstants.W3C_XML_SCHEMA_NS_URI );
+		schema = schemaFactory.newSchema(new StreamSource(getResource("/SBGN.xsd")));
+
+		Validator validator = schema.newValidator();
+		validator.validate(new StreamSource(f));
+
+		return true;
 	}
 	
 	/**
